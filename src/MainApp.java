@@ -31,7 +31,7 @@ public class MainApp extends Application{
 		gui = new Gui(primaryStage);
 		loop = new Updater();
 		initialise();
-		loop.startService(16666666);
+		loop.startService(100000000);
 	}
 	
 	public static void initialise(){
