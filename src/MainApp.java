@@ -15,12 +15,14 @@ public class MainApp extends Application{
 	private static long baseWorker;
 	private static long valWorker;
 	private static long timeWorker;
+	private static long mpsWorker;
 	
 	//Bags
 	private static int bag;
 	private static long baseBag;
 	private static long valBag;
 	private static long timeBag;
+	private static long mpsBag;
 	
 	public static void main(String[] args){
 		launch(args);
@@ -28,10 +30,9 @@ public class MainApp extends Application{
 	
 	@Override
 	public void start(Stage primaryStage) throws Exception {
-		gui = new Gui(primaryStage);
 		loop = new Updater();
 		initialise();
-		loop.startService(100000000);
+		gui = new Gui(primaryStage);
 	}
 	
 	public static void initialise(){
@@ -39,15 +40,21 @@ public class MainApp extends Application{
 		baseWorker = 4000000000L;
 		timeWorker = baseWorker;
 		valWorker = 10;
+		mpsWorker = worker*valWorker;///(baseWorker/1000000000);
 		
 		bag = 1;
 		baseBag = 8000000000L;
 		timeBag = baseBag;
 		valBag = 20;
+		mpsBag = bag*valBag*(baseBag/1000000000);
 		
 		cents = 0;
 		rate = 16666666;
+	}
+	
+	public static void launchLoop(){
 		time = System.nanoTime();
+		loop.startService(16666666);
 	}
 
 	public static void logic(){
@@ -56,8 +63,8 @@ public class MainApp extends Application{
 		time = System.nanoTime();
 		long latency = (time - lastTime - rate);
 		
-		timeWorker = addMonies(latency, timeWorker, baseWorker, valWorker, worker);
-		timeBag = addMonies(latency, timeBag, baseBag, valBag, bag);
+		timeWorker = addMonies(latency, timeWorker, baseWorker, valWorker, worker, 1);
+		timeBag = addMonies(latency, timeBag, baseBag, valBag, bag, 2);
 		
 		String moneys = getMonies();
 		gui.setMonies(moneys + "\n" + worker + ", " + valWorker + ", " + baseWorker);
@@ -66,7 +73,7 @@ public class MainApp extends Application{
 		sync = false;
 	}
 	
-	public static long addMonies(long latency, long timer, long base, long val, long amount){
+	public static long addMonies(long latency, long timer, long base, long val, long amount, int item){
 		timer = timer - (rate + latency);
 		if(timer <= 0){
 			timer += base;
@@ -78,6 +85,7 @@ public class MainApp extends Application{
 			}
 			cents += (val*amount);
 		}
+		gui.setProgress(item, (double)(base-timer)/base);
 		return timer;
 	}
 	
@@ -140,5 +148,39 @@ public class MainApp extends Application{
 		sync();
 		valWorker = (int)(valWorker*1.2);
 		sync = false;
+	}
+	
+	public static long getMps(int item){
+		sync();
+		long mps = -1;
+		switch(item){
+			case 1:
+				mps = mpsWorker;
+				sync = false;
+				return mps;
+			case 2:
+				mps =  mpsBag;
+				sync = false;
+				return mps;
+		}
+		sync = false;
+		return mps;
+	}
+	
+	public static int getAmount(int item){
+		sync();
+		int amount = -1;
+		switch(item){
+			case 1:
+				amount =  worker;
+				sync = false;
+				return amount;
+			case 2:
+				amount =  bag;
+				sync = false;
+				return amount;
+		}
+		sync = false;
+		return amount;
 	}
 }
